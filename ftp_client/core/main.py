@@ -160,37 +160,40 @@ class FtpClient(object):
         else:
             overwrite = False
             files = cmd[1:]
-        for filename in files:
-            file_abs_path = os.path.join(self.local_path, filename)
-            if os.path.isfile(file_abs_path):
-                fileSize = os.stat(file_abs_path).st_size
-                msg = {
-                    'action': 'put',
-                    'filename': filename,
-                    'fileSize': fileSize,
-                    'overwrite': overwrite
-                }
-                self.client.send(json.dumps(msg).encode('utf-8'))
-                rsp = json.loads(self.client.recv(1024).decode('utf-8'))  # 接收服务端返回的确认消息
-                code = rsp['code']
-                content = rsp['content']
-                if code == '202':
-                    f = open(file_abs_path, 'rb')
-                    m = md5()
-                    for line in f:
-                        m.update(line)
-                        self.client.send(line)
-                    f.close()
-                    self.client.send(m.hexdigest().encode('utf-8'))
-                    result = json.loads(self.client.recv(1024).decode('utf-8'))['content']
-                    print(result)
-                elif code == '409':
-                    print('content')
-                elif code == '401':
-                    print(content)
-                    break
-            else:
-                print('"{}" dose not exist'.format(filename))
+        if files:
+            for filename in files:
+                file_abs_path = os.path.join(self.local_path, filename)
+                if os.path.isfile(file_abs_path):
+                    fileSize = os.stat(file_abs_path).st_size
+                    msg = {
+                        'action': 'put',
+                        'filename': filename,
+                        'fileSize': fileSize,
+                        'overwrite': overwrite
+                    }
+                    self.client.send(json.dumps(msg).encode('utf-8'))
+                    rsp = json.loads(self.client.recv(1024).decode('utf-8'))  # 接收服务端返回的确认消息
+                    code = rsp['code']
+                    content = rsp['content']
+                    if code == '202':
+                        f = open(file_abs_path, 'rb')
+                        m = md5()
+                        for line in f:
+                            m.update(line)
+                            self.client.send(line)
+                        f.close()
+                        self.client.send(m.hexdigest().encode('utf-8'))
+                        result = json.loads(self.client.recv(1024).decode('utf-8'))['content']
+                        print(result)
+                    elif code == '409':
+                        print('content')
+                    elif code == '401':
+                        print(content)
+                        break
+                else:
+                    print('"{}" dose not exist'.format(filename))
+        else:
+            print('Syntax error')
 
 
     def get(self, *args):
@@ -201,46 +204,49 @@ class FtpClient(object):
         else:
             overwrite = False
             files = cmd[1:]
-        for filename in files:
-            file_abs_path = os.path.join(self.local_path, filename)
-            if os.path.isfile(file_abs_path) and not overwrite:
-                print('"{}" already exist'.format(filename))
-            else:
-                msg = {
-                    'action': 'get',
-                    'filename': filename
-                }
-                self.client.send(json.dumps(msg).encode('utf-8'))
-                rsp = json.loads(self.client.recv(1024).decode('utf-8'))
-                code = rsp['code']
-                content = rsp['content']
-                if code == '202':
-                    fileSize = rsp['fileSize']
-                    self.client.send('read to accept file'.encode('utf-8')) # 随便发送一个消息，防止粘包
-                    m = md5()
-                    received_size = 0
-                    f = open(file_abs_path, 'wb')
-                    while fileSize > received_size:
-                        if fileSize - received_size > 1024:
-                            size = 1024
-                        else:
-                            size = fileSize - received_size
-                        data = self.client.recv(size)
-                        f.write(data)
-                        m.update(data)
-                        received_size += len(data)
-                    f.close()
-                    src_md5 = self.client.recv(1024).decode()
-                    dest_md5 = m.hexdigest()
-                    if src_md5 == dest_md5:
-                        print('"{}" get success'.format(filename))
-                    else:
-                        print('"{}" md5 check failed'.format(filename))
-                elif code == '401':
-                    print(content)
-                    break
+        if files:
+            for filename in files:
+                file_abs_path = os.path.join(self.local_path, filename)
+                if os.path.isfile(file_abs_path) and not overwrite:
+                    print('"{}" already exist'.format(filename))
                 else:
-                    print(content)
+                    msg = {
+                        'action': 'get',
+                        'filename': filename
+                    }
+                    self.client.send(json.dumps(msg).encode('utf-8'))
+                    rsp = json.loads(self.client.recv(1024).decode('utf-8'))
+                    code = rsp['code']
+                    content = rsp['content']
+                    if code == '202':
+                        fileSize = rsp['fileSize']
+                        self.client.send('read to accept file'.encode('utf-8')) # 随便发送一个消息，防止粘包
+                        m = md5()
+                        received_size = 0
+                        f = open(file_abs_path, 'wb')
+                        while fileSize > received_size:
+                            if fileSize - received_size > 1024:
+                                size = 1024
+                            else:
+                                size = fileSize - received_size
+                            data = self.client.recv(size)
+                            f.write(data)
+                            m.update(data)
+                            received_size += len(data)
+                        f.close()
+                        src_md5 = self.client.recv(1024).decode()
+                        dest_md5 = m.hexdigest()
+                        if src_md5 == dest_md5:
+                            print('"{}" get success'.format(filename))
+                        else:
+                            print('"{}" md5 check failed'.format(filename))
+                    elif code == '401':
+                        print(content)
+                        break
+                    else:
+                        print(content)
+        else:
+            print('Syntax error')
 
 
     def mkdir(self, *args):

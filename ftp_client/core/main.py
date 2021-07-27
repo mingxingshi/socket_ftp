@@ -23,13 +23,9 @@ logger = logging.getLogger(__name__)
 
 class FtpClient(object):
     def __init__(self, ip, port):
-        # m = md5()
-        # m.update(password.encode('utf-8'))
         self.client = socket.socket()
         self.server_ip = ip
         self.server_port = port
-        # self.username = username
-        # self.__password = m.hexdigest()
         self.username = ''
         self.local_path = BASEDIR
 
@@ -60,7 +56,6 @@ class FtpClient(object):
         password = cmd.split()[2]
         m = md5()
         m.update(password.encode('utf-8'))
-        # self.client.connect((self.server_ip, self.server_port))
         msg = {
             'action': 'auth',
             'username': username,
@@ -72,11 +67,9 @@ class FtpClient(object):
         status = settings.status_code[code]['status']
         status_desc = settings.status_code[code]['desc']
         if status:
-            # logger.info('{}|auth|{}|{}'.format(username, code, status_desc))
             print(status_desc)
             self.username = username
         else:
-            # logger.error('{}|auth|{}|{}'.format(username, code, status_desc))
             print(status_desc)
 
 
@@ -181,7 +174,6 @@ class FtpClient(object):
                 rsp = self.client.recv(1024)  # 接收服务端返回的确认消息
                 code = json.loads(rsp.decode('utf-8'))['code']
                 if code == '202':
-                    # logger.info('{}|{}|{}'.format(self.username, status, status_desc))
                     f = open(file_abs_path, 'rb')
                     m = md5()
                     for line in f:
@@ -190,10 +182,8 @@ class FtpClient(object):
                     f.close()
                     self.client.send(m.hexdigest().encode('utf-8'))
                     result = json.loads(self.client.recv(1024).decode('utf-8'))['content']
-                    # logger.info('{}|{}|put|success'.format(self.username, os.path.split(filename)[1]))
                     print(result)
                 elif code == '409':
-                    # logger.error('{}|{}|put|{}|{}'.format(self.username, filename, status, status_desc))
                     print('"{}" already exist'.format(filename))
             else:
                 print('"{}" dose not exist'.format(filename))
@@ -219,10 +209,7 @@ class FtpClient(object):
                 self.client.send(json.dumps(msg).encode('utf-8'))
                 rsp = json.loads(self.client.recv(1024).decode('utf-8'))
                 code = rsp['code']
-                # status = settings.status_code[code]['status']
-                # status_desc = settings.status_code[code]['desc']
                 if code == '202':
-                    # logger.info('{}|{}|{}'.format(self.username, status, status_desc))
                     fileSize = rsp['fileSize']
                     self.client.send('read to accept file'.encode('utf-8')) # 随便发送一个消息，防止粘包
                     m = md5()
@@ -261,10 +248,6 @@ class FtpClient(object):
         # status = settings.status_code[code]['status']
         content = json.loads(rsp.decode('utf-8'))['content']
         print(content)
-        # if status:
-        #     logger.info('{}|{}|mkdir|{}'.format(self.username, dirname, content))
-        # else:
-        #     logger.error('{}|{}|mkdir|{}'.format(self.username, dirname, content))
 
 
     def dir(self, *args):

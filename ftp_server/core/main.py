@@ -22,12 +22,7 @@ logging.basicConfig(level = logging.DEBUG,format = '%(asctime)s | %(name)s | %(l
 logger = logging.getLogger(__name__)
 
 
-
 class FtpServer(socketserver.BaseRequestHandler):
-    # def __init__(self, request, client_address, server):
-    #     super(FtpServer, self).__init__(request, client_address, server)
-    #     self.current_path = ''
-    #     self.login_status = False
     current_path = ''
     userHome = ''
     login_status = False
@@ -267,8 +262,6 @@ class FtpServer(socketserver.BaseRequestHandler):
         else:
             msg = {'code': '404', 'content': '"{}" file dose not exist'.format(filename)}
             self.request.send(json.dumps(msg).encode('utf-8'))
-
-
 
 
 if __name__ == '__main__':

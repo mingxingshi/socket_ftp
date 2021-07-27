@@ -96,7 +96,7 @@ class FtpClient(object):
                             self.client.send(json.dumps(msg).encode('utf-8'))
                             break
                         else:
-                            print('输入不允许为空，请重新输入')
+                            print('The input cannot be empty, please re-enter')
             except KeyboardInterrupt:
                 msg = {
                     'code': '205',

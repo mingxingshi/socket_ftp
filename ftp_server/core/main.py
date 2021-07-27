@@ -154,7 +154,7 @@ class FtpServer(socketserver.BaseRequestHandler):
                 if force:
                     os.remove(file_path)
                 else:
-                    msg = {'code': '100', 'content': '是否删除普通文件"{}"? '.format(file)}
+                    msg = {'code': '100', 'content': 'Delete normal file "{}"? '.format(file)}
                     self.request.send(json.dumps(msg).encode('utf-8'))
                     if self.request.recv(1024).decode('utf-8') in ['y', 'yes']:
                         os.remove(file_path)
@@ -164,7 +164,7 @@ class FtpServer(socketserver.BaseRequestHandler):
                 if force:
                     shutil.rmtree(file_path)
                 else:
-                    msg = {'code': '100', 'content': '是否删除目录"{}"? '.format(file)}
+                    msg = {'code': '100', 'content': 'Delete directory "{}"? '.format(file)}
                     self.request.send(json.dumps(msg).encode('utf-8'))
                     if self.request.recv(1024).decode('utf-8').strip() in ['y', 'yes']:
                         shutil.rmtree(file_path)

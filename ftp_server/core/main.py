@@ -14,7 +14,7 @@ import logging
 from hashlib import md5
 import shutil
 
-BASEDIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+BASEDIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASEDIR)
 from conf import settings
 

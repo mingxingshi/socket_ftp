@@ -171,8 +171,9 @@ class FtpClient(object):
                     'overwrite': overwrite
                 }
                 self.client.send(json.dumps(msg).encode('utf-8'))
-                rsp = self.client.recv(1024)  # 接收服务端返回的确认消息
-                code = json.loads(rsp.decode('utf-8'))['code']
+                rsp = json.loads(self.client.recv(1024).decode('utf-8'))  # 接收服务端返回的确认消息
+                code = rsp['code']
+                content = rsp['content']
                 if code == '202':
                     f = open(file_abs_path, 'rb')
                     m = md5()
@@ -184,7 +185,10 @@ class FtpClient(object):
                     result = json.loads(self.client.recv(1024).decode('utf-8'))['content']
                     print(result)
                 elif code == '409':
-                    print('"{}" already exist'.format(filename))
+                    print('content')
+                elif code == '401':
+                    print(content)
+                    break
             else:
                 print('"{}" dose not exist'.format(filename))
 
@@ -209,6 +213,7 @@ class FtpClient(object):
                 self.client.send(json.dumps(msg).encode('utf-8'))
                 rsp = json.loads(self.client.recv(1024).decode('utf-8'))
                 code = rsp['code']
+                content = rsp['content']
                 if code == '202':
                     fileSize = rsp['fileSize']
                     self.client.send('read to accept file'.encode('utf-8')) # 随便发送一个消息，防止粘包
@@ -231,8 +236,10 @@ class FtpClient(object):
                         print('"{}" get success'.format(filename))
                     else:
                         print('"{}" md5 check failed'.format(filename))
+                elif code == '401':
+                    print(content)
+                    break
                 else:
-                    content = rsp['content']
                     print(content)
 
 
@@ -278,25 +285,33 @@ class FtpClient(object):
         else:
             force_mode = False
             files = cmd[1:]
-        msg = {
-            'action': 'rm',
-            'force': force_mode,
-            'files': files
-        }
-        self.client.send(json.dumps(msg).encode('utf-8'))
-        if not force_mode:
-            while True:
+        if files:
+            for file in files:
+                msg = {
+                    'action': 'rm',
+                    'force': force_mode,
+                    'file': file
+                }
+                self.client.send(json.dumps(msg).encode('utf-8'))
                 rsp = json.loads(self.client.recv(1024).decode('utf-8'))
-                if rsp['code'] == '100':  # 确认是否删除
-                    confirm_msg = input(rsp['content'])
-                    if not confirm_msg:
-                        self.client.send('n'.encode('utf-8'))
+                if not force_mode:
+                    if rsp['code'] == '100':  # 确认是否删除
+                        confirm_msg = input(rsp['content'])
+                        if not confirm_msg:
+                            self.client.send(b'n')
+                        else:
+                            self.client.send(confirm_msg.encode('utf-8'))
+                    elif rsp['code'] == '401':
+                        print(rsp['content'])
+                        break
                     else:
-                        self.client.send(confirm_msg.encode('utf-8'))
-                elif rsp['code'] == '404':  # 文件或目录不存在
-                    print(rsp['content'])
-                elif rsp['code'] == '226':  # 已删除完成
-                    break
+                        print(rsp['content'])
+                else:
+                    if rsp['code'] == '401':
+                        print(rsp['content'])
+                        break
+        else:
+            print('Syntax error')
 
 
     def cd(self, *args):

@@ -47,52 +47,49 @@ class FtpServer(socketserver.BaseRequestHandler):
 
 
     def register(self, *args):
-        while True:
-            msg1 = {'code': '100.1', 'content': settings.status_code['100.1']['desc']}
-            self.request.send(json.dumps(msg1).encode('utf-8'))
-            rsp1 = json.loads(self.request.recv(1024).strip().decode('utf-8'))
-            if rsp1['code'] == '200':
-                username = rsp1['content']
-                if os.path.isfile(os.path.join(os.path.join(BASEDIR, 'data'), '{}.json'.format(username))):
-                    msg2 = {'code': '409', 'content': 'Username already exist'}
-                    self.request.send(json.dumps(msg2).encode('utf-8'))
-                    continue
-                while True:
-                    msg3 = {'code': '100.2', 'content': settings.status_code['100.2']['desc']}
-                    self.request.send(json.dumps(msg3).encode('utf-8'))
-                    rsp2 = json.loads(self.request.recv(1024).strip().decode('utf-8'))
-                    if rsp2['code'] == '200':
-                        password1 = rsp2['content']
-                        msg4 = {'code': '100.3', 'content': settings.status_code['100.3']['desc']}
-                        self.request.send(json.dumps(msg4).encode('utf-8'))
-                        rsp3 = json.loads(self.request.recv(1024).strip().decode('utf-8'))
-                        if rsp3['code'] == '200':
-                            password2 = rsp3['content']
-                            if password1 == password2:
-                                m = md5()
-                                m.update(password1.encode('utf-8'))
-                                userHome = os.path.join(os.path.join(BASEDIR, 'users'), username)
-                                try:
-                                    os.makedirs(userHome)
-                                except FileExistsError:
-                                    pass
-                                userInfo = {'username': username, 'password': m.hexdigest(), 'userHome': userHome}
-                                f = open(os.path.join(os.path.join(BASEDIR, 'data'), '{}.json'.format(username)), 'w')
-                                json.dump(userInfo, f)
-                                msg5 = {'code': '200', 'content': 'user [{}] registered'.format(username)}
-                                logger.info('{}|200|user [{}] registered'.format(username, username))
-                                self.request.send(json.dumps(msg5).encode('utf-8'))
-                                f.flush()
-                                f.close()
-                                break
-                            else:
-                                continue
-                        else:
+        msg1 = {'code': '100.1', 'content': settings.status_code['100.1']['desc']}
+        self.request.send(json.dumps(msg1).encode('utf-8'))
+        rsp1 = json.loads(self.request.recv(1024).strip().decode('utf-8'))
+        if rsp1['code'] == '200':
+            username = rsp1['content']
+            if os.path.isfile(os.path.join(os.path.join(BASEDIR, 'data'), '{}.json'.format(username))):
+                msg2 = {'code': '409', 'content': 'Username already exist'}
+                self.request.send(json.dumps(msg2).encode('utf-8'))
+            while True:
+                msg3 = {'code': '100.2', 'content': settings.status_code['100.2']['desc']}
+                self.request.send(json.dumps(msg3).encode('utf-8'))
+                rsp2 = json.loads(self.request.recv(1024).strip().decode('utf-8'))
+                if rsp2['code'] == '200':
+                    password1 = rsp2['content']
+                    msg4 = {'code': '100.3', 'content': settings.status_code['100.3']['desc']}
+                    self.request.send(json.dumps(msg4).encode('utf-8'))
+                    rsp3 = json.loads(self.request.recv(1024).strip().decode('utf-8'))
+                    if rsp3['code'] == '200':
+                        password2 = rsp3['content']
+                        if password1 == password2:
+                            m = md5()
+                            m.update(password1.encode('utf-8'))
+                            userHome = os.path.join(os.path.join(BASEDIR, 'users'), username)
+                            try:
+                                os.makedirs(userHome)
+                            except FileExistsError:
+                                pass
+                            userInfo = {'username': username, 'password': m.hexdigest(), 'userHome': userHome}
+                            f = open(os.path.join(os.path.join(BASEDIR, 'data'), '{}.json'.format(username)), 'w')
+                            json.dump(userInfo, f)
+                            msg5 = {'code': '200', 'content': 'user [{}] registered'.format(username)}
+                            logger.info('{}|200|user [{}] registered'.format(username, username))
+                            self.request.send(json.dumps(msg5).encode('utf-8'))
+                            f.flush()
+                            f.close()
                             break
+                        else:
+                            continue
                     else:
                         break
-            else:
-                break
+                else:
+                    break
+
 
 
     def auth(self, *args):

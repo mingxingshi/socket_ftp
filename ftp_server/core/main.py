@@ -206,7 +206,7 @@ class FtpServer(socketserver.BaseRequestHandler):
 
 
     def pwd(self, *args):
-        path = self.current_path.lstrip(os.path.dirname(self.userHome))
+        path = self.current_path.replace(os.path.commonprefix([self.current_path, os.path.dirname(self.userHome)]), '', 1)
         self.request.send(path.encode('utf-8'))
 
 
@@ -231,9 +231,9 @@ class FtpServer(socketserver.BaseRequestHandler):
                     size = fileSize - received_size
                 data = self.request.recv(size)
                 f.write(data)
-                f.close()
                 m.update(data)
                 received_size += len(data)
+            f.close()
             src_md5 = self.request.recv(1024).decode('utf-8')
             dest_md5 = m.hexdigest()
             if src_md5 == dest_md5:

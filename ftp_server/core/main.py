@@ -265,8 +265,11 @@ class FtpServer(socketserver.BaseRequestHandler):
 
 
 if __name__ == '__main__':
-    host, port = 'localhost', 10021
-    server = socketserver.ThreadingTCPServer((host, port), FtpServer)  # 多线程
-    # server = socketserver.ForkingTCPServer((host, port), FtpServer) # 多进程，无法在windows使用，因为windows上的os模块没有fork方法
-    logger.info('ftp server started')
-    server.serve_forever()
+    try:
+        host, port = 'localhost', 10021
+        server = socketserver.ThreadingTCPServer((host, port), FtpServer)  # 多线程
+        # server = socketserver.ForkingTCPServer((host, port), FtpServer) # 多进程，无法在windows使用，因为windows上的os模块没有fork方法
+        logger.info('ftp server started')
+        server.serve_forever()
+    except OSError as e:
+        print(e)

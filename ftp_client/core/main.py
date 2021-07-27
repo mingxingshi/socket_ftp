@@ -329,5 +329,8 @@ class FtpClient(object):
 
 
 if __name__ == '__main__':
-    client = FtpClient('localhost', 10021)
-    client.interactive()
+    try:
+        client = FtpClient('localhost', 10021)
+        client.interactive()
+    except ConnectionRefusedError as e:
+        print(e)

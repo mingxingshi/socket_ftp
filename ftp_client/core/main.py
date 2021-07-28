@@ -256,10 +256,8 @@ class FtpClient(object):
             'dirname': dirname
         }
         self.client.send(json.dumps(msg).encode('utf-8'))
-        rsp = self.client.recv(1024)
-        code = json.loads(rsp.decode('utf-8'))['code']
-        # status = settings.status_code[code]['status']
-        content = json.loads(rsp.decode('utf-8'))['content']
+        rsp = json.loads(self.client.recv(1024).decode('utf-8'))
+        content = rsp['content']
         print(content)
 
 

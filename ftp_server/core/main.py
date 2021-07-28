@@ -184,7 +184,6 @@ class FtpServer(socketserver.BaseRequestHandler):
             else:
                 os.mkdir(os.path.join(self.current_path, dirname))
                 msg = {'code': '200', 'content': 'success'}
-            self.request.send(json.dumps(msg).encode('utf-8'))
         else:
             msg = {'code': '401', 'content': 'Unauthorized, sign-in or sign-up'}
         self.request.send(json.dumps(msg).encode('utf-8'))

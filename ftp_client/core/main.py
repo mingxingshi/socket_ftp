@@ -51,26 +51,29 @@ class FtpClient(object):
 
 
     def auth(self, *args):
-        cmd = args[0]
-        username = cmd.split()[1]
-        password = cmd.split()[2]
-        m = md5()
-        m.update(password.encode('utf-8'))
-        msg = {
-            'action': 'auth',
-            'username': username,
-            'password': m.hexdigest()
-        }
-        self.client.send(json.dumps(msg).encode('utf-8'))
-        rsp = self.client.recv(1024)
-        code = json.loads(rsp.decode('utf-8'))['code']
-        status = settings.status_code[code]['status']
-        status_desc = settings.status_code[code]['desc']
-        if status:
-            print(status_desc)
-            self.username = username
-        else:
-            print(status_desc)
+        try:
+            cmd = args[0]
+            username = cmd.split()[1]
+            password = cmd.split()[2]
+            m = md5()
+            m.update(password.encode('utf-8'))
+            msg = {
+                'action': 'auth',
+                'username': username,
+                'password': m.hexdigest()
+            }
+            self.client.send(json.dumps(msg).encode('utf-8'))
+            rsp = self.client.recv(1024)
+            code = json.loads(rsp.decode('utf-8'))['code']
+            status = settings.status_code[code]['status']
+            status_desc = settings.status_code[code]['desc']
+            if status:
+                print(status_desc)
+                self.username = username
+            else:
+                print(status_desc)
+        except IndexError:
+            print('Syntax error')
 
 
     def register(self, *args):

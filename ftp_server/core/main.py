@@ -77,7 +77,7 @@ class FtpServer(socketserver.BaseRequestHandler):
                             userInfo = {'username': username, 'password': m.hexdigest(), 'userHome': userHome}
                             f = open(os.path.join(os.path.join(BASEDIR, 'data'), '{}.json'.format(username)), 'w')
                             json.dump(userInfo, f)
-                            msg5 = {'code': '200', 'content': 'user [{}] registered'.format(username)}
+                            msg5 = {'code': '200', 'content': '"{username}" successfully registered'.format(username=username)}
                             logger.info('{}|200|user [{}] registered'.format(username, username))
                             self.request.send(json.dumps(msg5).encode('utf-8'))
                             f.flush()
@@ -135,7 +135,9 @@ class FtpServer(socketserver.BaseRequestHandler):
                         file_type = 'link'
                     elif os.path.ismount(os.path.join(self.current_path, file)):
                         file_type = 'mount'
-                    msg += ('{} | {} | {}\n'.format(file_type, os.stat(os.path.join(self.current_path, file)).st_size, file))
+                    msg += ('{file_type} | {st_size} | {file}\n'.format(file_type=file_type,
+                                                                        st_size=os.stat(os.path.join(self.current_path, file)).st_size,
+                                                                        file=file))
                 msg = msg.rstrip('\n').encode('utf-8')
             else:
                 msg = '\n'.encode('utf-8')
@@ -153,17 +155,17 @@ class FtpServer(socketserver.BaseRequestHandler):
             if not force:
                 if os.path.exists(file_abs_path):
                     if os.path.isfile(file_abs_path):
-                        msg = {'code': '100', 'content': 'Delete normal file "{}"? '.format(file)}
+                        msg = {'code': '100', 'content': 'Delete normal file "{file}"? '.format(file=file)}
                         self.request.send(json.dumps(msg).encode('utf-8'))
                         if self.request.recv(1024).decode('utf-8') in ['y', 'yes']:
                             os.remove(file_abs_path)
                     elif os.path.isdir(file_abs_path):
-                        msg = {'code': '100', 'content': 'Delete directory "{}"? '.format(file)}
+                        msg = {'code': '100', 'content': 'Delete directory "{file}"? '.format(file=file)}
                         self.request.send(json.dumps(msg).encode('utf-8'))
                         if self.request.recv(1024).decode('utf-8').strip() in ['y', 'yes']:
                             shutil.rmtree(file_abs_path)
                 else:
-                    msg = {'code': '404', 'content': 'No such file or directory "{}"? '.format(file)}
+                    msg = {'code': '404', 'content': 'No such file or directory "{file}"? '.format(file=file)}
                     self.request.send(json.dumps(msg).encode('utf-8'))
             else:
                 if os.path.isfile(file_abs_path):
@@ -178,7 +180,7 @@ class FtpServer(socketserver.BaseRequestHandler):
             data = args[0]
             dirname = data['dirname']
             if os.path.isdir(os.path.join(self.current_path, dirname)):
-                msg = {'code': '409', 'content': '"{}" already exist'.format(dirname)}
+                msg = {'code': '409', 'content': '"{dirname}" already exist'.format(dirname=dirname)}
             else:
                 os.mkdir(os.path.join(self.current_path, dirname))
                 msg = {'code': '200', 'content': 'success'}
@@ -202,9 +204,9 @@ class FtpServer(socketserver.BaseRequestHandler):
                     self.current_path = current_path_tmp
                     msg = {'code': '200', 'content': 'success'}
                 elif os.path.isfile(current_path_tmp):
-                    msg = {'code': '400', 'content': '"{}" Not a directory'.format(path)}
+                    msg = {'code': '400', 'content': '"{path}" Not a directory'.format(path=path)}
                 elif not os.path.exists(current_path_tmp):
-                    msg = {'code': '400', 'content': '"cd {}" : no such file or directory'.format(path)}
+                    msg = {'code': '400', 'content': '"cd {path}" : no such file or directory'.format(path=path)}
             else:
                 msg = {'code': '401', 'content': 'Permission denied'}
         else:
@@ -227,7 +229,7 @@ class FtpServer(socketserver.BaseRequestHandler):
             fileSize = cmd['fileSize']
             overwrite = cmd['overwrite']
             if os.path.isfile(os.path.join(self.current_path, filename)) and not overwrite:
-                msg = {'code': '409', 'content': '"{}" already exist'.format(filename)}
+                msg = {'code': '409', 'content': '"{filename}" already exist'.format(filename=filename)}
                 self.request.send(json.dumps(msg).encode('utf-8'))
             else:
                 msg = {'code': '202', 'content': 'ready to accept file'}
@@ -248,9 +250,9 @@ class FtpServer(socketserver.BaseRequestHandler):
                 src_md5 = self.request.recv(1024).decode('utf-8')
                 dest_md5 = m.hexdigest()
                 if src_md5 == dest_md5:
-                    msg = {'code': '200', 'content': '"{}" put success'.format(filename)}
+                    msg = {'code': '200', 'content': '"{filename}" put success'.format(filename=filename)}
                 else:
-                    msg = {'code': '410', 'content': '"{}" md5 check failed'.format(filename)}
+                    msg = {'code': '410', 'content': '"{filename}" md5 check failed'.format(filename=filename)}
                 self.request.send(json.dumps(msg).encode('utf-8'))
         else:
             msg = {'code': '401', 'content': 'Unauthorized, sign-in or sign-up'}
@@ -275,7 +277,7 @@ class FtpServer(socketserver.BaseRequestHandler):
                 f.close()
                 self.request.send(m.hexdigest().encode('utf-8'))
             else:
-                msg = {'code': '404', 'content': '"{}" file dose not exist'.format(filename)}
+                msg = {'code': '404', 'content': '"{filename}" file dose not exist'.format(filename=filename)}
                 self.request.send(json.dumps(msg).encode('utf-8'))
         else:
             msg = {'code': '401', 'content': 'Unauthorized, sign-in or sign-up'}
@@ -291,3 +293,5 @@ if __name__ == '__main__':
         server.serve_forever()
     except OSError as e:
         print(e)
+    except KeyboardInterrupt:
+        logger.info('ftp server stopped')

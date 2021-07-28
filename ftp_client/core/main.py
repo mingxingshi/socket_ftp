@@ -129,8 +129,10 @@ class FtpClient(object):
     def lcd(self, *args):
         try:
             path = args[0].split()[1]
-            if not os.path.isabs(path):
-                path = os.path.join(self.local_path, path)
+            if os.path.isabs(path):
+                path = os.path.abspath(path)
+            else:
+                path = os.path.abspath(os.path.join(self.local_path, path))
             if os.path.isdir(path):
                 self.local_path = path
             else:

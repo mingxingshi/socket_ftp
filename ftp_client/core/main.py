@@ -128,7 +128,13 @@ class FtpClient(object):
 
     def lcd(self, *args):
         try:
-            self.local_path = args[0].split()[1]
+            path = args[0].split()[1]
+            if not os.path.isabs(path):
+                path = os.path.join(self.local_path, path)
+            if os.path.isdir(path):
+                self.local_path = path
+            else:
+                print('"{}" No such file or directory'.format(path))
         except IndexError:
             self.local_path = BASEDIR
 

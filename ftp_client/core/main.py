@@ -197,7 +197,7 @@ class FtpClient(object):
                         result = json.loads(self.client.recv(1024).decode('utf-8'))['content']
                         print(result)
                     elif code == '409':
-                        print('content')
+                        print(content)
                     elif code == '401':
                         print(content)
                         break
